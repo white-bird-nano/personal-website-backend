@@ -38,6 +38,13 @@ Jibを使用してDockerデーモンなしでイメージをビルドし、Artif
 > [!TIP]
 > `src/main/resources/application.properties` にこれらの値を記載しておくことで、コマンドライン引数を省略することも可能です。
 
+### Apple Silicon (M1/M2) Mac を使用している場合
+デフォルトではビルド環境と同じアーキテクチャ（ARM64）のイメージが作成されます。Cloud Run で確実に動作させるために、`application.properties` でターゲットプラットフォームを `linux/amd64` に固定する設定を追加しています。
+
+```properties
+quarkus.jib.platforms=linux/amd64
+```
+
 ## 3. Cloud Run へのデプロイ
 
 プッシュしたイメージを使用して Cloud Run へデプロイします。
@@ -51,6 +58,13 @@ gcloud run deploy <SERVICE_NAME> \
 ```
 
 ## 4. トラブルシューティング
+
+- **404 Not Found (Repository Not Found)**:
+  `"errors":[{"code":"NAME_UNKNOWN","message":"Repository \"...\" not found"}]` というエラーが出る場合、指定した Artifact Registry の**リポジトリ**が存在しないか、名前・リージョンが間違っています。
+  - Google Cloud Console で Artifact Registry を開き、リポジトリ名を確認してください。
+  - `quarkus.container-image.group` に指定する値は `PROJECT_ID/REPOSITORY_NAME` です。
+  - リポジトリの場所（REGION）が `asia-northeast1` かどうかも確認してください。
+  - ※Jibは自動でリポジトリを作成しません。Terraform等であらかじめ作成しておく必要があります。
 
 - **認証エラー**: `gcloud auth configure-docker` が正しく実行されているか確認してください。
 - **ビルドエラー**: `./gradlew clean build` を試してください。
